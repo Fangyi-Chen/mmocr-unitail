@@ -157,14 +157,27 @@ class EncodeDecodeRecognizer(BaseRecognizer):
         return results
 
     def merge_aug_results(self, aug_results):
-        out_text, out_score = '', -1
+        out_text, out_score, out_encoder_feat, out_backbone_feat, out_reserve_char_logit = '', -1, 0, 0, 0
+        encoder_feature, backbone_feature, reserve_char_logit = 0,0,0
+        if len(aug_results) > 1:
+            # print('aug ing')
+            pass
         for result in aug_results:
             text = result[0]['text']
+            per_char_score = result[0]['score']
+            if 'encoder_feat' in result[0].keys():
+                encoder_feature = result[0]['encoder_feat']
+                backbone_feature = result[0]['backbone_feat']
+                reserve_char_logit = result[0]['reserve_char_logit']
             score = sum(result[0]['score']) / max(1, len(text))
             if score > out_score:
                 out_text = text
+                out_per_char_score = per_char_score
                 out_score = score
-        out_results = [dict(text=out_text, score=out_score)]
+                out_encoder_feat = encoder_feature
+                out_backbone_feat = backbone_feature
+                out_reserve_char_logit = reserve_char_logit
+        out_results = [dict(text=out_text, score=out_score, encoder_feat=out_encoder_feat, backbone_feat=out_backbone_feat, reserve_char_logit=out_reserve_char_logit, char_score=out_per_char_score)]
         return out_results
 
     def aug_test(self, imgs, img_metas, **kwargs):

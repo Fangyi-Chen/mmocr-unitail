@@ -142,3 +142,7 @@ mmocr/.mim
 workdirs/
 .history/
 .dev/
+
+demo_imgs/
+ocr_feat/
+results/

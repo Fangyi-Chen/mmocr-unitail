@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # Copyright (c) OpenMMLab. All rights reserved.
 import os.path as osp
+import os
 from argparse import ArgumentParser
 
 import mmcv
@@ -48,17 +49,19 @@ def save_results(result, out_dir, img_name, score_thr=0.3):
     lines = [
         ','.join([str(round(x)) for x in row]) for row in valid_boundary_res
     ]
-    list_to_file(txt_file, lines)
+    lines2 = [
+        ','.join([str(round(x)) for x in row[:-1]])+','+str(row[-1]) for row in valid_boundary_res
+    ]
+    list_to_file(txt_file, lines2)
 
 
 def main():
     parser = ArgumentParser()
     parser.add_argument('img_root', type=str, help='Image root path')
-    parser.add_argument('img_list', type=str, help='Image path list file')
     parser.add_argument('config', type=str, help='Config file')
     parser.add_argument('checkpoint', type=str, help='Checkpoint file')
     parser.add_argument(
-        '--score-thr', type=float, default=0.5, help='Bbox score threshold')
+        '--score-thr', type=float, default=0.1, help='Bbox score threshold')
     parser.add_argument(
         '--out-dir',
         type=str,
@@ -83,7 +86,7 @@ def main():
     out_txt_dir = osp.join(args.out_dir, 'out_txt_dir')
     mmcv.mkdir_or_exist(out_txt_dir)
 
-    lines = list_from_file(args.img_list)
+    lines = os.listdir(args.img_root)
     progressbar = ProgressBar(task_num=len(lines))
     for line in lines:
         progressbar.update()

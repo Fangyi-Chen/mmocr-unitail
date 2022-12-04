@@ -26,8 +26,8 @@ class DBPostprocessor(BasePostprocessor):
 
     def __init__(self,
                  text_repr_type='poly',
-                 mask_thr=0.3,
-                 min_text_score=0.3,
+                 mask_thr=0.1,
+                 min_text_score=0.1,
                  min_text_width=5,
                  unclip_ratio=1.5,
                  max_candidates=3000,

@@ -116,3 +116,21 @@ test_pipeline_ctw1500 = [
             dict(type='Collect', keys=['img']),
         ])
 ]
+
+
+test_pipeline_unitailocr = [
+    dict(type='LoadImageFromFile', color_type='color_ignore_orientation'),
+    dict(
+        type='MultiScaleFlipAug',
+        img_scale=(1080, 736),
+        flip=False,
+        transforms=[
+            dict(type='Resize', img_scale=(1080, 736), keep_ratio=True),
+            dict(type='Normalize', **img_norm_cfg),
+            dict(type='Pad', size_divisor=32),
+            dict(type='ImageToTensor', keys=['img']),
+            dict(type='Collect', keys=['img']),
+        ])
+]
+
+

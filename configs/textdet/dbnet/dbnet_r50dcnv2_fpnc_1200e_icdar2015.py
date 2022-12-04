@@ -12,7 +12,7 @@ test_list = {{_base_.test_list}}
 train_pipeline_r50dcnv2 = {{_base_.train_pipeline_r50dcnv2}}
 test_pipeline_4068_1024 = {{_base_.test_pipeline_4068_1024}}
 
-load_from = 'checkpoints/textdet/dbnet/res50dcnv2_synthtext.pth'
+# load_from = 'checkpoints/textdet/dbnet/res50dcnv2_synthtext.pth'
 
 data = dict(
     samples_per_gpu=8,

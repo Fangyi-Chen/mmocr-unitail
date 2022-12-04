@@ -5,6 +5,7 @@ import shutil
 import time
 from argparse import ArgumentParser
 from itertools import compress
+import os
 
 import mmcv
 from mmcv.utils import ProgressBar
@@ -40,7 +41,6 @@ def save_results(img_paths, pred_labels, gt_labels, res_dir):
 def main():
     parser = ArgumentParser()
     parser.add_argument('img_root_path', type=str, help='Image root path')
-    parser.add_argument('img_list', type=str, help='Image path list file')
     parser.add_argument('config', type=str, help='Config file')
     parser.add_argument('checkpoint', type=str, help='Checkpoint file')
     parser.add_argument(
@@ -70,7 +70,7 @@ def main():
     mmcv.mkdir_or_exist(wrong_vis_dir)
     img_paths, pred_labels, gt_labels = [], [], []
 
-    lines = list_from_file(args.img_list)
+    lines = os.listdir(args.img_root_path)
     progressbar = ProgressBar(task_num=len(lines))
     num_gt_label = 0
     for line in lines:

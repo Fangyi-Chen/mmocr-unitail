@@ -67,6 +67,7 @@ class BaseConvertor:
             for char in string:
                 char_idx = self.char2idx.get(char, self.unknown_idx)
                 if char_idx is None:
+                    continue
                     raise Exception(f'Chararcter: {char} not in dict,'
                                     f' please check gt_label and use'
                                     f' custom dict file,'

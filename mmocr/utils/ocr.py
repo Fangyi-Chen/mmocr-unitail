@@ -5,6 +5,8 @@ import os
 import warnings
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
+import json
+import cv2
 
 import mmcv
 import numpy as np
@@ -32,12 +34,12 @@ def parse_args():
     parser.add_argument(
         '--output',
         type=str,
-        default='',
+        default='/home/fangyi/data/unitail/afterocr_debug',
         help='Output file/folder name for visualization')
     parser.add_argument(
         '--det',
         type=str,
-        default='PANet_IC15',
+        default='DB_r50',
         help='Pretrained text detection algorithm')
     parser.add_argument(
         '--det-config',
@@ -48,13 +50,13 @@ def parse_args():
     parser.add_argument(
         '--det-ckpt',
         type=str,
-        default='',
+        default='./exps/fromweb/dbnet_r50dcnv2_fpnc_sbn_1200e_icdar2015_20211025-9fe3b590.pth',
         help='Path to the custom checkpoint file of the selected det model. '
         'It overrides the settings in det')
     parser.add_argument(
         '--recog',
         type=str,
-        default='SEG',
+        default='ABINet',
         help='Pretrained text recognition algorithm')
     parser.add_argument(
         '--recog-config',
@@ -65,7 +67,7 @@ def parse_args():
     parser.add_argument(
         '--recog-ckpt',
         type=str,
-        default='',
+        default='./exps/fromweb/abinet_academic-f718abf6.pth',
         help='Path to the custom checkpoint file of the selected recog model. '
         'It overrides the settings in recog')
     parser.add_argument(
@@ -187,7 +189,7 @@ class MMOCR:
             },
             'DB_r50': {
                 'config':
-                'dbnet/dbnet_r50dcnv2_fpnc_1200e_icdar2015.py',
+                'dbnet/dbnet_r50dcnv2_fpnc_1200e_unitailocr.py',
                 'ckpt':
                 'dbnet/'
                 'dbnet_r50dcnv2_fpnc_sbn_1200e_icdar2015_20211025-9fe3b590.pth'
@@ -427,6 +429,7 @@ class MMOCR:
         if self.detect_model and self.recog_model:
             det_recog_result = self.det_recog_kie_inference(
                 self.detect_model, self.recog_model, kie_model=self.kie_model)
+            # self.tolabelme(args, det_recog_result, save='/home/fangyi/data/unitail/labelmejson')
             pp_result = self.det_recog_pp(det_recog_result)
         else:
             for model in list(
@@ -437,6 +440,25 @@ class MMOCR:
                 pp_result = self.single_pp(result, model)
 
         return pp_result
+
+    def tolabelme(self, args, res, save='json'):
+        if not os.path.exists(save):
+            os.makedirs(save)
+        for img, re in zip(args.arrays, res):
+            h, w, _  = img.shape
+            filename = re['filename']
+            texts    = re['result']
+            with open(os.path.join(save, filename+'.json'), 'w') as f:
+                output = {"version": "4.5.7", "flags": {}, "shapes": [], "imagePath": filename+".jpg", "imageData": None, "imageHeight": h, "imageWidth": w}
+                for text in texts:
+                    shape = {}
+                    shape["label"]    = text['text']
+                    shape["points"]   = np.array(text['box']).reshape(4, 2).tolist()
+                    shape["group_id"] = None
+                    shape["shape_type"] = "polygon"
+                    shape["flags"]      = {}
+                    output["shapes"].append(shape)
+                json.dump(output, f)
 
     # Post processing function for end2end ocr
     def det_recog_pp(self, result):
@@ -545,9 +567,11 @@ class MMOCR:
                                                    self.args.output):
             img_e2e_res = {}
             img_e2e_res['filename'] = filename
+            # print(filename)
             img_e2e_res['result'] = []
             box_imgs = []
             for bbox in bboxes:
+                # print(bbox)
                 box_res = {}
                 box_res['box'] = [round(x) for x in bbox[:-1]]
                 box_res['box_score'] = float(bbox[-1])
@@ -561,6 +585,11 @@ class MMOCR:
                         min_x, min_y, max_x, min_y, max_x, max_y, min_x, max_y
                     ]
                 box_img = crop_img(arr, box)
+                w, h, _ = box_img.shape
+                scale   = w * h
+                if not scale > 200:
+                    continue
+                # print(filename, scale)
                 if self.args.batch_mode:
                     box_imgs.append(box_img)
                 else:
@@ -682,7 +711,7 @@ class MMOCR:
             output_path = Path(args.output)
             if output_path.is_dir():
                 args.output = [
-                    str(output_path / f'out_{x}.png') for x in args.filenames
+                    str(output_path / f'{x}.png') for x in args.filenames
                 ]
             else:
                 args.output = [str(args.output)]

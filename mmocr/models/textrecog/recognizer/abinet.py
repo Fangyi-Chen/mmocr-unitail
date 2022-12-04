@@ -180,6 +180,10 @@ class ABINet(EncodeDecodeRecognizer):
         if torch.onnx.is_in_onnx_export():
             return ret['logits']
 
+        # give softmax to ret['logits']
+        reserve_char_logit = ret['logits']
+        ret['logits'] = torch.softmax(ret['logits'], dim=-1)
+
         label_indexes, label_scores = self.label_convertor.tensor2idx(
             ret['logits'], img_metas)
         label_strings = self.label_convertor.idx2str(label_indexes)
@@ -187,6 +191,7 @@ class ABINet(EncodeDecodeRecognizer):
         # flatten batch results
         results = []
         for string, score in zip(label_strings, label_scores):
-            results.append(dict(text=string, score=score))
+            results.append(dict(text=string, score=score, encoder_feat=out_enc['feature'], backbone_feat=feat,
+                                reserve_char_logit=reserve_char_logit))
 
         return results
