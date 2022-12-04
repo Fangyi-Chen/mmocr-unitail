@@ -117,6 +117,7 @@ data/*
 *.log.json
 work_dirs/
 exps/
+exps
 *~
 show_dir/
 
